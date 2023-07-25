@@ -11,6 +11,9 @@ app = dash.Dash(__name__)
 
 # Define the layout of the app
 app.layout = html.Div([
+    dcc.Graph(id='bar-chart'),
+    dcc.Graph(id='correlation-matrix', figure={}),
+    dcc.Graph(id='line-chart'),
     dcc.Dropdown(
         id='name-dropdown',
         options=[{'label': name, 'value': name} for name in df['Name']],
@@ -46,6 +49,78 @@ def update_radar_chart(selected_name):
             radialaxis=dict(visible=True, range=[0, 100]),
         ),
         showlegend=False
+    )
+
+    return fig
+
+# Initialize the figure outside the callback
+traits = ["Openness", "Conscientiousness", "Extraversion", "Agreeableness", "Neuroticism"]
+genders = df["Gender"].unique()
+
+fig_bar = go.Figure()
+
+# Define the callback to update the bar chart
+@app.callback(
+    dash.dependencies.Output('bar-chart', 'figure'),
+    [dash.dependencies.Input('bar-chart', 'figure')]
+)
+def update_bar_chart(_):
+    fig_bar.data = []  # Clear the existing data before updating
+    traits = ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Neuroticism']
+    genders = ['M', 'F']
+
+    # for trait in traits:
+    for gender in genders:
+        avg_value = [df[df['Gender'] == gender][trait].mean() for trait in traits]
+        fig_bar.add_trace(go.Bar(
+            x=traits,
+            y=avg_value,
+            name=gender,
+        ))
+
+    fig_bar.update_layout(
+        barmode='group',
+        xaxis_title='Personality Trait',
+        yaxis_title='Score',
+    )
+
+    return fig_bar
+
+
+# Define the callback to update the correlation matrix heatmap
+@app.callback(
+    dash.dependencies.Output('correlation-matrix', 'figure'),
+    [dash.dependencies.Input('correlation-matrix', 'figure')]
+)
+def update_correlation_matrix(_):
+    fig = go.Figure(data=go.Heatmap(z=df.loc[:, traits].corr().values, x=traits, y=traits, colorscale='Viridis'))
+    fig.update_layout(
+        title='Correlation Matrix',
+        xaxis_title='Personality Traits',
+        yaxis_title='Personality Traits',
+    )
+    return fig
+
+
+# Define the callback to update the line chart
+@app.callback(
+    dash.dependencies.Output('line-chart', 'figure'),
+    [dash.dependencies.Input('line-chart', 'figure')]
+)
+def update_line_chart(_):
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df['Neuroticism'],
+        y=df['Conscientiousness'],
+        mode='markers',
+        name='Conscientiousness'
+    ))
+
+    fig.update_layout(
+        title='Conscientiousness against Neuroticism',
+        xaxis_title='Neuroticism',
+        yaxis_title='Conscientiousness',
     )
 
     return fig
