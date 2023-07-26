@@ -52,24 +52,10 @@ app.layout = html.Div([
     html.Br(),  # Line break
     html.H2("Radar Charts"),  # Heading for the entire section
     dcc.Dropdown(
-        id='name-dropdown1',
+        id='name-dropdown',
         options=[{'label': name, 'value': name} for name in df['Name']],
         value=df['Name'][0],  # Default value for the dropdown
-    ),
-    dcc.Dropdown(
-        id='name-dropdown2',
-        options=[{'label': name, 'value': name} for name in df['Name']],
-        value=df['Name'][0],  # Default value for the dropdown
-    ),
-    dcc.Dropdown(
-        id='name-dropdown3',
-        options=[{'label': name, 'value': name} for name in df['Name']],
-        value=df['Name'][0],  # Default value for the dropdown
-    ),
-    dcc.Dropdown(
-        id='name-dropdown4',
-        options=[{'label': name, 'value': name} for name in df['Name']],
-        value=df['Name'][0],  # Default value for the dropdown
+        multi=True
     ),
     html.Div(
         dcc.Graph(id='radar-chart'),
@@ -87,59 +73,32 @@ app.layout = html.Div([
 @app.callback(
     Output('radar-chart', 'figure'),
     [
-        Input('name-dropdown1', 'value'),
-        Input('name-dropdown2', 'value'),
-        Input('name-dropdown3', 'value'),
-        Input('name-dropdown4', 'value'),
+        Input('name-dropdown', 'value'),
     ]
 )
 
-def update_radar_chart(selected_name1, selected_name2, selected_name3, selected_name4):
-    selected_data1 = df[df['Name'] == selected_name1]
-    selected_data2 = df[df['Name'] == selected_name2]
-    selected_data3 = df[df['Name'] == selected_name3]
-    selected_data4 = df[df['Name'] == selected_name4]
-
+def update_radar_chart(selected_name):
+    if type(selected_name) == str:
+        selected_name = [selected_name]
+    
     categories = ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Neuroticism']
-
-    values1 = selected_data1[categories].values.tolist()[0]
-    values2 = selected_data2[categories].values.tolist()[0]
-    values3 = selected_data3[categories].values.tolist()[0]
-    values4 = selected_data4[categories].values.tolist()[0]
-
-    # Append the first variable at the end to close the loop in the chart
-    values1.append(values1[0])
-    values2.append(values2[0])
-    values3.append(values3[0])
-    values4.append(values4[0])
-
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatterpolar(
-        r=values1,
-        theta=categories + [categories[0]],
-        fill='toself',
-        name=selected_name1
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=values2,
-        theta=categories + [categories[0]],
-        fill='toself',
-        name=selected_name2
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=values3,
-        theta=categories + [categories[0]],
-        fill='toself',
-        name=selected_name3
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=values4,
-        theta=categories + [categories[0]],
-        fill='toself',
-        name=selected_name4
-    ))
+    for name in selected_name:
+        selected_data = df[df['Name'] == name]
+
+        values = selected_data[categories].values.tolist()[0]
+
+        # Append the first variable at the end to close the loop in the chart
+        values.append(values[0])
+
+        fig.add_trace(go.Scatterpolar(
+            r=values,
+            theta=categories + [categories[0]],
+            fill='toself',
+            name=name
+        ))
 
     # Update the layout for better visualization
     fig.update_layout(
