@@ -1,25 +1,67 @@
 import dash
 from dash import dcc
 from dash import html
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
 
 df = pd.read_csv("./OCEAN_BESE11A.csv")
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+# Define the header element
+header = html.Header(
+    dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("Exploratory Data Analysis", href="#")),
+            dbc.NavItem(dbc.NavLink("About", href="#")),
+        ],
+        brand="My Dash App",
+        brand_href="#",
+        color="primary",
+        dark=True,
+    )
+)
+
+def define_card(column_name, most_caption, least_caption):
+    return dbc.Col(dbc.Card(
+            dbc.CardBody([
+                html.H4(column_name, className=column_name.lower()),
+                html.P(f'{most_caption}: {", ".join(df["Name"][df[column_name] == df[column_name].max()].values)}'),
+                html.P(f'{least_caption}: {", ".join(df["Name"][df[column_name] == df[column_name].min()].values)}'),
+            ]),
+        ))
 
 # Define the layout of the app
 app.layout = html.Div([
-    dcc.Graph(id='bar-chart'),
-    dcc.Graph(id='correlation-matrix', figure={}),
-    dcc.Graph(id='line-chart'),
+    header,  # Include the header element in the layout
+    html.Br(),  # Line break
+    html.H2("Quick Insights"),  # Heading for the entire section
+    dbc.Row([
+        define_card(column_name="Openness", most_caption="Most open", least_caption="Least open"),
+        define_card(column_name="Conscientiousness", most_caption="Most organized", least_caption="Most erratic"),      
+    ], className="w-100"),
+    html.Br(),  # Line break
+    # 'Extraversion', 'Agreeableness', 'Neuroticism'
+    dbc.Row([
+        define_card(column_name="Extraversion", most_caption="Most extroverted", least_caption="Most introverted"),
+        define_card(column_name="Agreeableness", most_caption="Most agreeable", least_caption="Least agreeable"),
+        define_card(column_name="Neuroticism", most_caption="Most neurotic", least_caption="Least neurotic"),
+    ], className="w-100"),
+    html.Br(),  # Line break
+    html.H2("Radar Charts"),  # Heading for the entire section
     dcc.Dropdown(
         id='name-dropdown',
         options=[{'label': name, 'value': name} for name in df['Name']],
         value=df['Name'][0],  # Default value for the dropdown
     ),
     dcc.Graph(id='radar-chart'),
+    html.Br(),  # Line break
+    html.H2("Exploratory Data Analysis"),  # Heading for the entire section
+    dcc.Graph(id='bar-chart'),
+    dcc.Graph(id='correlation-matrix', figure={}),
+    dcc.Graph(id='line-chart'),    
 ])
 
 # Define the callback to update the radar chart based on the selected name
@@ -82,6 +124,7 @@ def update_bar_chart(_):
         barmode='group',
         xaxis_title='Personality Trait',
         yaxis_title='Score',
+        title="Measuring Gender Disparity in Personality Traits"
     )
 
     return fig_bar
