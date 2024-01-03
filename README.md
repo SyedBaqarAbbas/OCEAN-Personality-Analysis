@@ -1,5 +1,5 @@
 # OCEAN-Personality-Analysis
-Web-based Dashboard displaying insights into the results of a personality test using Dash in Python.
+Web-based dashboard displaying insights into the results of a personality test using Dash.
 
 ### Highlight:
 ![image](https://github.com/SyedBaqarAbbas/OCEAN-Personality-Analysis/assets/73883918/52b3a782-33ab-42fe-902c-ca10243ba60a)
